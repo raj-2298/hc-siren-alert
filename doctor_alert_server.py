@@ -21,7 +21,7 @@ sio = socketio.AsyncServer(
 
 # Create FastAPI app and attach socket.io server
 app = FastAPI()
-socket_app = socketio.ASGIApp(sio, other_asgi_app=fastapi_app)
+socket_app = socketio.ASGIApp(sio, other_asgi_app=app)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
