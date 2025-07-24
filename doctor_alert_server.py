@@ -7,6 +7,7 @@ from starlette.responses import HTMLResponse
 from starlette.routing import Route
 from starlette.staticfiles import StaticFiles
 from fastapi.staticfiles import StaticFiles
+from fastapi.middleware.cors import CORSMiddleware
 
 # Create a Socket.IO Async Server with polling only (no WebSockets)
 sio = socketio.AsyncServer(
@@ -24,6 +25,13 @@ socket_app = socketio.ASGIApp(sio, other_asgi_app=fastapi_app)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # Allow all origins, or replace with specific domain(s)
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
