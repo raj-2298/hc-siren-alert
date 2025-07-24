@@ -1,42 +1,34 @@
 import socketio
 from fastapi import FastAPI
-from fastapi.responses import FileResponse
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
-# Create Socket.IO server
 sio = socketio.AsyncServer(
-    async_mode="asgi",
-    cors_allowed_origins="*",
-    logger=True,
-    engineio_logger=True,
+    async_mode='asgi',
+    cors_allowed_origins='*',
     allow_upgrades=False,
-    transports=["polling"]
+    transports=['polling']
 )
 
-# FastAPI app
-app = FastAPI()
-app.add_middleware(
+fastapi_app = FastAPI()
+
+fastapi_app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
-    allow_headers=["*"]
+    allow_headers=["*"],
 )
 
-# Serve static files
-app.mount("/static", StaticFiles(directory="static"), name="static")
+fastapi_app.mount("/static", StaticFiles(directory="static"), name="static")
 
-# Serve static HTML directly
-@app.get("/")
-async def get_home():
-    return FileResponse("siren.html")
+@fastapi_app.get("/")
+async def root():
+    return {"message": "Siren server is running"}
 
-# Trigger siren
-@app.post("/api/trigger")
+@fastapi_app.post("/api/trigger")
 async def trigger_alert():
     await sio.emit("mail_alert", {"message": "New Mail Received!"})
-    return {"status": "siren played"}
+    return {"status": "alert emitted"}
 
-# Combine apps
-socket_app = socketio.ASGIApp(sio, other_asgi_app=app)
+app = socketio.ASGIApp(sio, other_asgi_app=fastapi_app)
