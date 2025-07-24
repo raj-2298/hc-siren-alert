@@ -1,41 +1,42 @@
 import socketio
 from fastapi import FastAPI
+from fastapi.responses import FileResponse
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
-# Create a Socket.IO Async Server with polling only
+# Create Socket.IO server
 sio = socketio.AsyncServer(
-    async_mode='asgi',
-    cors_allowed_origins='*',
+    async_mode="asgi",
+    cors_allowed_origins="*",
     logger=True,
     engineio_logger=True,
     allow_upgrades=False,
-    transports=['polling']
+    transports=["polling"]
 )
 
-# Create FastAPI app
+# FastAPI app
 app = FastAPI()
-
-# Add CORS middleware
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
-    allow_headers=["*"],
+    allow_headers=["*"]
 )
+
+# Serve static files
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
-# Health check
+# Serve static HTML directly
 @app.get("/")
-async def root():
-    return {"message": "HC Siren Alert Server is running (Polling Mode)."}
+async def get_home():
+    return FileResponse("siren.html")
 
-# Webhook to emit mail alert
+# Trigger siren
 @app.post("/api/trigger")
 async def trigger_alert():
     await sio.emit("mail_alert", {"message": "New Mail Received!"})
     return {"status": "siren played"}
 
-# Create full ASGI app combining Socket.IO and FastAPI
+# Combine apps
 socket_app = socketio.ASGIApp(sio, other_asgi_app=app)
